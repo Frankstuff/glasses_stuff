@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>chesshacker</title>
+<style>
+  :root {
+    --bg: #f4f3ef; --card: #ffffff; --ink: #1d1d1b; --muted: #75736c; --line: #e2e0d8;
+    --accent: #2e9f5b; --blue: #2f6fd6; --amber: #b7791f; --red: #c53b33;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151514; --card: #1f1f1d; --ink: #ecebe6; --muted: #9a988f; --line: #33322e;
+            --accent: #4cc27c; --blue: #6c9cf0; --amber: #e0a644; --red: #ec6a62; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 18px; }
+  header h1 { font-size: 16px; margin: 0; letter-spacing: .02em; }
+  .pill { padding: 3px 10px; border-radius: 999px; font-weight: 600; background: var(--line); }
+  .pill.go { background: var(--accent); color: #fff; }
+  .pill.warn { background: var(--amber); color: #fff; }
+  .pill.bad { background: var(--red); color: #fff; }
+  .meta { color: var(--muted); font-size: 13px; }
+  main { display: grid; gap: 14px; padding: 0 18px 14px;
+         grid-template-columns: minmax(240px, 1fr) minmax(300px, 440px) minmax(280px, 1.2fr); }
+  @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+          min-width: 0; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+             margin: 0 0 8px; font-weight: 600; }
+  #frame { width: 100%; max-height: 62vh; object-fit: contain; border-radius: 6px; background: #000; display: block; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-size: 12px; }
+  .badge { border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; color: var(--muted); }
+  #board img { width: 100%; height: auto; display: block; }
+  .bar { height: 8px; border-radius: 4px; background: #333; overflow: hidden; margin: 10px 0 6px; }
+  .bar div { height: 100%; background: #f2f2ee; transition: width .3s; }
+  #say { font-size: 22px; font-weight: 650; min-height: 32px; }
+  #say small { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+  #log { height: 62vh; overflow-y: auto; font: 12px/1.6 var(--mono); }
+  #log div { white-space: pre-wrap; word-break: break-word; border-bottom: 1px dashed var(--line); }
+  #log .commit, #log .ready { color: var(--blue); font-weight: 600; }
+  #log .suggest { color: var(--accent); font-weight: 600; }
+  #log .lost, #log .error { color: var(--red); }
+  #log .call, #log .ended, #log .paused, #log .control, #log .game_over { color: var(--amber); }
+  #log .frame { color: var(--muted); }
+  .logbar { display: flex; justify-content: space-between; align-items: center; }
+  select, input, button { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+                          border-radius: 6px; padding: 5px 9px; }
+  button { cursor: pointer; } button:hover { border-color: var(--muted); }
+  footer { padding: 0 18px 18px; }
+  #moves { font: 13px/1.7 var(--mono); margin-bottom: 10px; min-height: 22px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .controls .sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; }
+  #fen { width: 300px; max-width: 100%; }
+</style>
+</head>
+<body>
+<header>
+  <h1>♞ chesshacker</h1>
+  <span id="status" class="pill">Connecting…</span>
+  <span class="meta" id="who"></span>
+  <span class="meta" id="setup"></span>
+  <span class="meta" id="spend"></span>
+  <a class="meta" href="/overlay" target="_blank" style="color: inherit">overlay video ↗</a>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Live frame</h2>
+    <img id="frame" alt="latest frame from the call">
+    <div class="badges" id="badges"></div>
+  </section>
+
+  <section class="card">
+    <h2>Board</h2>
+    <div id="board"></div>
+    <div class="bar" title="evaluation: white's share"><div id="bar" style="width:50%"></div></div>
+    <div id="say"></div>
+  </section>
+
+  <section class="card">
+    <div class="logbar">
+      <h2>Console</h2>
+      <select id="filter">
+        <option value="all">everything</option>
+        <option value="moves">moves &amp; speech</option>
+        <option value="problems">problems</option>
+      </select>
+    </div>
+    <div id="log"></div>
+  </section>
+</main>
+
+<footer class="card" style="margin: 0 18px 18px">
+  <div id="moves"></div>
+  <div class="controls">
+    <button id="pause">Pause</button>
+    <button id="undo">Undo</button>
+    <button id="repeat">Say it again</button>
+    <span class="sep"></span>
+    <input id="move" placeholder="Enter a move (Nf3 or g1f3)" size="22">
+    <button id="play">Play</button>
+    <span class="sep"></span>
+    <select id="color"><option>white</option><option>black</option></select>
+    <input id="fen" placeholder="Starting position (FEN), blank for a new game">
+    <button id="new">New game</button>
+  </div>
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const MOVES = new Set(["commit", "suggest", "ready", "game_over"]);
+const PROBLEMS = new Set(["lost", "error", "call", "ended", "paused"]);
+let state = {};
+
+const events = new EventSource("/events");
+events.onmessage = (message) => {
+  let event;
+  try { event = JSON.parse(message.data); } catch { return; }
+  if (!event || typeof event !== "object") return;
+  if (event.kind === "state") return render(event);
+  log(event);
+  if (event.kind === "frame") {
+    $("frame").src = "/frame.jpg?t=" + Date.now();
+    badges(event);
+  }
+};
+events.onerror = () => { $("status").textContent = "Disconnected"; $("status").className = "pill bad"; };
+
+function render(s) {
+  state = s;
+  const status = $("status");
+  status.textContent = s.status;
+  status.className = "pill " + ({ "Your move": "go", "Waiting for opponent": "go", "Paused": "warn",
+    "Looking for the board": "warn", "Lost track": "bad", "Can't see the call": "bad" }[s.status] || "");
+  $("who").textContent = `you: ${s.my_color} · ${s.turn} to move`;
+  $("setup").textContent = `${s.model} · ${s.strategy}${s.gate ? " · Jev pre-check" : ""}`;
+  $("spend").textContent = `$${Number(s.spent ?? 0).toFixed(2)} of $${Number(s.max_cost ?? 0).toFixed(2)}`;
+  // SVG in an image retains the board's appearance without an active markup context.
+  const board = document.createElement("img");
+  board.alt = "Current chess position";
+  board.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s.board_svg || "");
+  $("board").replaceChildren(board);
+  if (s.frame_t != null) $("frame").src = "/frame.jpg?t=" + Date.now();
+  $("pause").textContent = s.paused ? "Resume" : "Pause";
+  const g = s.suggestion;
+  $("say").textContent = g ? g.spoken : "";
+  if (g) {
+    const detail = document.createElement("small");
+    detail.textContent = `${g.san} · ${g.score}`;
+    $("say").appendChild(detail);
+  }
+  $("bar").style.width = ((g && Number.isFinite(g.bar) ? Math.max(0, Math.min(1, g.bar)) : 0.5) * 100).toFixed(1) + "%";
+  $("moves").textContent = s.moves || "No moves yet.";
+}
+
+function badges(e) {
+  const items = [`t=${e.frame_t}s`, String(e.verdict ?? "").replace("ask_claude", "read by model")];
+  if (e.jev) items.push(`readable ${pct(e.jev.readable)}`, `hand ${pct(e.jev.hand)}`,
+                        e.jev.changed == null ? "" : `changed ${pct(e.jev.changed)}`);
+  if (e.vision) items.push(`model ${e.vision.seconds}s`);
+  if (e.margin != null) items.push(`margin ${e.margin}`);
+  $("badges").replaceChildren(...items.filter(Boolean).map((text) => {
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = text;
+    return badge;
+  }));
+}
+
+function describe(e) {
+  switch (e.kind) {
+    case "frame": {
+      const what = e.update === "seen" ? `saw ${e.move}` : e.update;
+      const skip = e.verdict === "ask_claude" ? "" : ` (skipped: ${e.verdict})`;
+      return `frame ${e.frame_t}s  ${what}${skip}${e.margin != null ? `  margin ${e.margin}` : ""}`;
+    }
+    case "commit": return `COMMIT ${e.san} by ${e.by}${e.suggested ? ` (suggested ${e.suggested})` : ""}`;
+    case "suggest": return `SAY "${e.spoken}"  ${e.san} ${e.score}`;
+    case "ready": return `READY, you're ${e.my_color}`;
+    case "control": return `control: ${e.action}${e.move ? " " + e.move : ""}`;
+    default: return `${e.kind}: ${e.detail ?? ""}`;
+  }
+}
+
+function log(e) {
+  const filter = $("filter").value;
+  if (filter === "moves" && !MOVES.has(e.kind)) return;
+  if (filter === "problems" && !PROBLEMS.has(e.kind)) return;
+  const line = document.createElement("div");
+  line.className = e.kind;
+  line.textContent = `${new Date(e.t * 1000).toLocaleTimeString()}  ${describe(e)}`;
+  const box = $("log");
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.appendChild(line);
+  while (box.childElementCount > 500) box.firstChild.remove();
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+const pct = (x) => x == null ? "–" : Math.round(x * 100) + "%";
+
+async function control(body) {
+  try {
+    const response = await fetch("/control", { method: "POST", headers: { "Content-Type": "application/json" },
+                                               body: JSON.stringify(body) });
+    if (!(response.headers.get("content-type") || "").includes("application/json")) {
+      throw new Error((await response.text()) || `Request failed (${response.status})`);
+    }
+    const result = await response.json();
+    if (!result.ok) alert(result.error);
+  } catch (error) {
+    alert(`Control failed: ${error.message || error}`);
+  }
+}
+
+$("pause").onclick = () => control({ action: state.paused ? "resume" : "pause" });
+$("undo").onclick = () => control({ action: "undo" });
+$("repeat").onclick = () => control({ action: "repeat" });
+$("play").onclick = () => { if ($("move").value.trim()) control({ action: "move", move: $("move").value.trim() }); $("move").value = ""; };
+$("move").onkeydown = (e) => { if (e.key === "Enter") $("play").onclick(); };
+$("new").onclick = () => control({ action: "new_game", color: $("color").value, fen: $("fen").value.trim() || null });
+</script>
+</body>
+</html>

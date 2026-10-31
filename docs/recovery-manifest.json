@@ -1,0 +1,119 @@
+{
+  "source_attachment": "pasted_text_2026-10-28_10-44-24.txt",
+  "sha256": "2e800c3a5581e0cfe884203cfcb7d2dedfd442f45d41cfbb1e7e8619cecb12a3",
+  "note": "Line ranges identify recovered blocks before repairs. The attachment is a transcript, not an authenticated upstream checkout. Tests, eval, README and DESIGN were not supplied as source.",
+  "recovered_files": {
+    "package.json": {
+      "from_line": 1003,
+      "to_line": 1043
+    },
+    "tsconfig.json": {
+      "from_line": 1045,
+      "to_line": 1064
+    },
+    "tsconfig.build.json": {
+      "from_line": 1066,
+      "to_line": 1074
+    },
+    "vitest.config.ts": {
+      "from_line": 1076,
+      "to_line": 1087
+    },
+    "src/bin.ts": {
+      "from_line": 1089,
+      "to_line": 1111
+    },
+    "src/config.ts": {
+      "from_line": 1113,
+      "to_line": 1202
+    },
+    "src/keychain.ts": {
+      "from_line": 1204,
+      "to_line": 1244
+    },
+    "src/vision.ts": {
+      "from_line": 1270,
+      "to_line": 1551
+    },
+    "src/match.ts": {
+      "from_line": 1553,
+      "to_line": 1822
+    },
+    "src/game.ts": {
+      "from_line": 1841,
+      "to_line": 1995
+    },
+    "src/watch.ts": {
+      "from_line": 1997,
+      "to_line": 2108
+    },
+    "src/capture.ts": {
+      "from_line": 2148,
+      "to_line": 2297
+    },
+    "src/macos.ts": {
+      "from_line": 2299,
+      "to_line": 2447
+    },
+    "src/speak.ts": {
+      "from_line": 2449,
+      "to_line": 2544
+    },
+    "src/engine.ts": {
+      "from_line": 2574,
+      "to_line": 2811
+    },
+    "src/main.ts": {
+      "from_line": 2813,
+      "to_line": 3287
+    },
+    "src/cli.ts": {
+      "from_line": 3289,
+      "to_line": 3705
+    },
+    "src/events.ts": {
+      "from_line": 3745,
+      "to_line": 3800
+    },
+    "src/gate.ts": {
+      "from_line": 3802,
+      "to_line": 3933
+    },
+    "src/pricing.ts": {
+      "from_line": 3935,
+      "to_line": 3964
+    },
+    "src/doctor.ts": {
+      "from_line": 3966,
+      "to_line": 4175
+    },
+    "src/web.ts": {
+      "from_line": 4213,
+      "to_line": 4344
+    },
+    "src/board-svg.ts": {
+      "from_line": 4346,
+      "to_line": 4439
+    },
+    "src/static/index.html": {
+      "from_line": 4441,
+      "to_line": 4639
+    },
+    "src/locate.ts": {
+      "from_line": 4669,
+      "to_line": 4723
+    },
+    "src/geometry.ts": {
+      "from_line": 4725,
+      "to_line": 4811
+    },
+    "src/feed.ts": {
+      "from_line": 4813,
+      "to_line": 4979
+    },
+    "src/overlay.ts": {
+      "from_line": 4981,
+      "to_line": 5227
+    }
+  }
+}

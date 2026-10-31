@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.context/
+.env
+.env.*
+!.env.example
+coverage/
+runs/
+evals/.cache/
+*.log
+.DS_Store
+fixtures/*.mov
+fixtures/*.MOV
+fixtures/*.mp4
+fixtures/*.mkv
